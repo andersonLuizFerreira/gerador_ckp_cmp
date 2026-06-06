@@ -12,10 +12,16 @@ enum class KeyboardKey {
   Select
 };
 
+struct KeyboardReading {
+  KeyboardKey key;
+  int raw;
+  int millivolts;
+};
+
 class AnalogKeyboard {
 public:
-  explicit AnalogKeyboard(uint8_t analogPin = A1, unsigned long debounceMs = 40)
-      : analogPin_(analogPin), debounceMs_(debounceMs) {}
+  explicit AnalogKeyboard(uint8_t analogPin = A1, unsigned long debounceMs = 40, int referenceMillivolts = 5000)
+      : analogPin_(analogPin), debounceMs_(debounceMs), referenceMillivolts_(referenceMillivolts) {}
 
   void begin() const {
     pinMode(analogPin_, INPUT);
@@ -25,31 +31,25 @@ public:
     return analogRead(analogPin_);
   }
 
+  int readMillivolts() const {
+    return rawToMillivolts(readRaw());
+  }
+
+  KeyboardReading read() const {
+    const int raw = readRaw();
+    return {keyFromRaw(raw), raw, rawToMillivolts(raw)};
+  }
+
   KeyboardKey readKey() const {
-    const int value = readRaw();
-
-    if (value < 70) {
-      return KeyboardKey::Right;
-    }
-    if (value < 235) {
-      return KeyboardKey::Up;
-    }
-    if (value < 430) {
-      return KeyboardKey::Down;
-    }
-    if (value < 625) {
-      return KeyboardKey::Left;
-    }
-    if (value < 870) {
-      return KeyboardKey::Select;
-    }
-
-    return KeyboardKey::None;
+    return read().key;
   }
 
   KeyboardKey update() {
-    const KeyboardKey currentKey = readKey();
+    const KeyboardReading currentReading = read();
+    const KeyboardKey currentKey = currentReading.key;
     const unsigned long now = millis();
+
+    lastReading_ = currentReading;
 
     if (currentKey != lastReadKey_) {
       lastReadKey_ = currentKey;
@@ -68,11 +68,54 @@ public:
     return stableKey_;
   }
 
+  KeyboardReading lastReading() const {
+    return lastReading_;
+  }
+
 private:
+  static const int rightExpectedRaw = 0;     // 0.00 V
+  static const int upExpectedRaw = 145;      // 0.71 V
+  static const int downExpectedRaw = 329;    // 1.61 V
+  static const int leftExpectedRaw = 505;    // 2.47 V
+  static const int selectExpectedRaw = 741;  // 3.62 V
+  static const int noneExpectedRaw = 1023;   // 5.00 V
+
+  static const int rightToUpThreshold = (rightExpectedRaw + upExpectedRaw) / 2;
+  static const int upToDownThreshold = (upExpectedRaw + downExpectedRaw) / 2;
+  static const int downToLeftThreshold = (downExpectedRaw + leftExpectedRaw) / 2;
+  static const int leftToSelectThreshold = (leftExpectedRaw + selectExpectedRaw) / 2;
+  static const int selectToNoneThreshold = (selectExpectedRaw + noneExpectedRaw) / 2;
+
+  static KeyboardKey keyFromRaw(int raw) {
+    if (raw <= rightToUpThreshold) {
+      return KeyboardKey::Right;
+    }
+    if (raw <= upToDownThreshold) {
+      return KeyboardKey::Up;
+    }
+    if (raw <= downToLeftThreshold) {
+      return KeyboardKey::Down;
+    }
+    if (raw <= leftToSelectThreshold) {
+      return KeyboardKey::Left;
+    }
+    if (raw <= selectToNoneThreshold) {
+      return KeyboardKey::Select;
+    }
+
+    return KeyboardKey::None;
+  }
+
+  int rawToMillivolts(int raw) const {
+    return static_cast<long>(raw) * referenceMillivolts_ / 1023;
+  }
+
   uint8_t analogPin_;
   unsigned long debounceMs_;
+  int referenceMillivolts_;
   KeyboardKey lastReadKey_ = KeyboardKey::None;
   KeyboardKey stableKey_ = KeyboardKey::None;
+  KeyboardReading lastReading_ = {KeyboardKey::None, 1023, 5000};
   unsigned long lastChangeMs_ = 0;
 };
 

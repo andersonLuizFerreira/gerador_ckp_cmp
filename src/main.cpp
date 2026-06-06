@@ -12,8 +12,15 @@ void loop() {
   const KeyboardKey key = keyboard.update();
 
   if (key != KeyboardKey::None) {
+    const KeyboardReading reading = keyboard.lastReading();
+
     Serial.print("Tecla pressionada: ");
-    Serial.println(keyboardKeyName(key));
+    Serial.print(keyboardKeyName(key));
+    Serial.print(" | ADC: ");
+    Serial.print(reading.raw);
+    Serial.print(" | Tensao: ");
+    Serial.print(reading.millivolts);
+    Serial.println(" mV");
   }
 
   delay(10);
