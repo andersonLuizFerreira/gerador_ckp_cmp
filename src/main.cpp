@@ -1,11 +1,19 @@
 #include <Arduino.h>
+#include <defs.h>
 #include <keyboard.h>
+#include <lcd_display.h>
 
-AnalogKeyboard keyboard(A1);
+AnalogKeyboard keyboard;
+LcdDisplay lcd;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(SERIAL_BAUD_RATE);
   keyboard.begin();
+  lcd.begin();
+  lcd.setCursor(0, 0);
+  lcd.printPadded("GERADOR CKP CMP");
+  lcd.setCursor(0, 1);
+  lcd.printPadded("Tecla: NONE");
 }
 
 void loop() {
@@ -21,6 +29,10 @@ void loop() {
     Serial.print(" | Tensao: ");
     Serial.print(reading.millivolts);
     Serial.println(" mV");
+
+    lcd.setCursor(0, 1);
+    lcd.print("Tecla: ");
+    lcd.printPadded(keyboardKeyName(key), LCD_COLUMNS - 7);
   }
 
   delay(10);

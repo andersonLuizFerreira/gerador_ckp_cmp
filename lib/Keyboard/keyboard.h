@@ -2,6 +2,7 @@
 #define KEYBOARD_H
 
 #include <Arduino.h>
+#include <defs.h>
 
 enum class KeyboardKey {
   None,
@@ -20,7 +21,8 @@ struct KeyboardReading {
 
 class AnalogKeyboard {
 public:
-  explicit AnalogKeyboard(uint8_t analogPin = A1, unsigned long debounceMs = 40, int referenceMillivolts = 5000)
+  explicit AnalogKeyboard(uint8_t analogPin = KEYBOARD_ANALOG_PIN, unsigned long debounceMs = KEYBOARD_DEBOUNCE_MS,
+                          int referenceMillivolts = ADC_REFERENCE_MILLIVOLTS)
       : analogPin_(analogPin), debounceMs_(debounceMs), referenceMillivolts_(referenceMillivolts) {}
 
   void begin() const {
@@ -74,26 +76,20 @@ public:
   }
 
 private:
-  static const int rightThresholdMillivolts = 500;
-  static const int upThresholdMillivolts = 1000;
-  static const int downThresholdMillivolts = 2000;
-  static const int leftThresholdMillivolts = 3000;
-  static const int selectThresholdMillivolts = 4000;
-
   static KeyboardKey keyFromMillivolts(int millivolts) {
-    if (millivolts < rightThresholdMillivolts) {
+    if (millivolts < KEYBOARD_RIGHT_THRESHOLD_MV) {
       return KeyboardKey::Right;
     }
-    if (millivolts < upThresholdMillivolts) {
+    if (millivolts < KEYBOARD_UP_THRESHOLD_MV) {
       return KeyboardKey::Up;
     }
-    if (millivolts < downThresholdMillivolts) {
+    if (millivolts < KEYBOARD_DOWN_THRESHOLD_MV) {
       return KeyboardKey::Down;
     }
-    if (millivolts < leftThresholdMillivolts) {
+    if (millivolts < KEYBOARD_LEFT_THRESHOLD_MV) {
       return KeyboardKey::Left;
     }
-    if (millivolts < selectThresholdMillivolts) {
+    if (millivolts < KEYBOARD_SELECT_THRESHOLD_MV) {
       return KeyboardKey::Select;
     }
 
@@ -109,7 +105,7 @@ private:
   int referenceMillivolts_;
   KeyboardKey lastReadKey_ = KeyboardKey::None;
   KeyboardKey stableKey_ = KeyboardKey::None;
-  KeyboardReading lastReading_ = {KeyboardKey::None, 1023, 5000};
+  KeyboardReading lastReading_ = {KeyboardKey::None, 1023, ADC_REFERENCE_MILLIVOLTS};
   unsigned long lastChangeMs_ = 0;
 };
 
