@@ -73,33 +73,26 @@ public:
   }
 
 private:
-  static const int rightExpectedRaw = 0;     // 0.00 V
-  static const int upExpectedRaw = 145;      // 0.71 V
-  static const int downExpectedRaw = 329;    // 1.61 V
-  static const int leftExpectedRaw = 505;    // 2.47 V
-  static const int selectExpectedRaw = 741;  // 3.62 V
-  static const int noneExpectedRaw = 1023;   // 5.00 V
-
-  static const int rightToUpThreshold = (rightExpectedRaw + upExpectedRaw) / 2;
-  static const int upToDownThreshold = (upExpectedRaw + downExpectedRaw) / 2;
-  static const int downToLeftThreshold = (downExpectedRaw + leftExpectedRaw) / 2;
-  static const int leftToSelectThreshold = (leftExpectedRaw + selectExpectedRaw) / 2;
-  static const int selectToNoneThreshold = (selectExpectedRaw + noneExpectedRaw) / 2;
+  static const int rightThreshold = 100;
+  static const int upThreshold = 200;
+  static const int downThreshold = 400;
+  static const int leftThreshold = 600;
+  static const int selectThreshold = 800;
 
   static KeyboardKey keyFromRaw(int raw) {
-    if (raw <= rightToUpThreshold) {
+    if (raw < rightThreshold) {
       return KeyboardKey::Right;
     }
-    if (raw <= upToDownThreshold) {
+    if (raw < upThreshold) {
       return KeyboardKey::Up;
     }
-    if (raw <= downToLeftThreshold) {
+    if (raw < downThreshold) {
       return KeyboardKey::Down;
     }
-    if (raw <= leftToSelectThreshold) {
+    if (raw < leftThreshold) {
       return KeyboardKey::Left;
     }
-    if (raw <= selectToNoneThreshold) {
+    if (raw < selectThreshold) {
       return KeyboardKey::Select;
     }
 
