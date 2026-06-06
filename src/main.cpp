@@ -1,15 +1,20 @@
 #include <Arduino.h>
+#include <keyboard.h>
+
+AnalogKeyboard keyboard(A1);
 
 void setup() {
   Serial.begin(9600);
-  pinMode(LED_BUILTIN, OUTPUT);
+  keyboard.begin();
 }
 
 void loop() {
-  digitalWrite(LED_BUILTIN, HIGH);
-  Serial.println("GERADOR_CKP_CMP iniciado");
-  delay(500);
+  const KeyboardKey key = keyboard.update();
 
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(500);
+  if (key != KeyboardKey::None) {
+    Serial.print("Tecla pressionada: ");
+    Serial.println(keyboardKeyName(key));
+  }
+
+  delay(10);
 }
