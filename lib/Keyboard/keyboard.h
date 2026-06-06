@@ -37,7 +37,8 @@ public:
 
   KeyboardReading read() const {
     const int raw = readRaw();
-    return {keyFromRaw(raw), raw, rawToMillivolts(raw)};
+    const int millivolts = rawToMillivolts(raw);
+    return {keyFromMillivolts(millivolts), raw, millivolts};
   }
 
   KeyboardKey readKey() const {
@@ -73,26 +74,26 @@ public:
   }
 
 private:
-  static const int rightThreshold = 100;
-  static const int upThreshold = 200;
-  static const int downThreshold = 400;
-  static const int leftThreshold = 600;
-  static const int selectThreshold = 800;
+  static const int rightThresholdMillivolts = 500;
+  static const int upThresholdMillivolts = 1000;
+  static const int downThresholdMillivolts = 2000;
+  static const int leftThresholdMillivolts = 3000;
+  static const int selectThresholdMillivolts = 4000;
 
-  static KeyboardKey keyFromRaw(int raw) {
-    if (raw < rightThreshold) {
+  static KeyboardKey keyFromMillivolts(int millivolts) {
+    if (millivolts < rightThresholdMillivolts) {
       return KeyboardKey::Right;
     }
-    if (raw < upThreshold) {
+    if (millivolts < upThresholdMillivolts) {
       return KeyboardKey::Up;
     }
-    if (raw < downThreshold) {
+    if (millivolts < downThresholdMillivolts) {
       return KeyboardKey::Down;
     }
-    if (raw < leftThreshold) {
+    if (millivolts < leftThresholdMillivolts) {
       return KeyboardKey::Left;
     }
-    if (raw < selectThreshold) {
+    if (millivolts < selectThresholdMillivolts) {
       return KeyboardKey::Select;
     }
 
