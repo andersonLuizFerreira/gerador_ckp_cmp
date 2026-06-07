@@ -19,9 +19,4 @@
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
 
-#define LCD_PIN_RS 0x01
-#define LCD_PIN_RW 0x02
-#define LCD_PIN_ENABLE 0x04
-#define LCD_PIN_BACKLIGHT 0x08
-
 #endif
