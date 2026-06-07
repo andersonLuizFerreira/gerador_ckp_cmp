@@ -11,7 +11,7 @@ public:
       : lcd_(address, columns, rows), columns_(columns), rows_(rows) {}
 
   void begin() {
-    lcd_.begin(columns_, rows_);
+    lcd_.init();
     lcd_.backlight();
     clear();
   }
