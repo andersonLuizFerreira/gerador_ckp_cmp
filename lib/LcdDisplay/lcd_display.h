@@ -2,6 +2,7 @@
 #define LCD_DISPLAY_H
 
 #include <Arduino.h>
+#include <avr/pgmspace.h>
 #include <LiquidCrystal_I2C.h>
 #include <defs.h>
 
@@ -41,6 +42,22 @@ public:
     while (*text != '\0' && printed < width) {
       lcd_.write(*text++);
       printed++;
+    }
+
+    while (printed < width) {
+      lcd_.write(' ');
+      printed++;
+    }
+  }
+
+  void printPadded_P(PGM_P text, uint8_t width = LCD_COLUMNS) {
+    uint8_t printed = 0;
+    char character = pgm_read_byte(text++);
+
+    while (character != '\0' && printed < width) {
+      lcd_.write(character);
+      printed++;
+      character = pgm_read_byte(text++);
     }
 
     while (printed < width) {

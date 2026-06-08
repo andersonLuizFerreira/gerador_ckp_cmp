@@ -36,8 +36,10 @@ public:
     const RpmReading currentReading = read();
     lastReading_ = currentReading;
 
-    if (!hasStableReading_ || abs(currentReading.rpm - stableRpm_) >= updateThreshold_) {
-      stableRpm_ = currentReading.rpm;
+    const int quantizedRpm = quantizeRpm(currentReading.rpm);
+
+    if (!hasStableReading_ || quantizedRpm != stableRpm_) {
+      stableRpm_ = quantizedRpm;
       hasStableReading_ = true;
       return true;
     }
@@ -57,6 +59,19 @@ private:
   int rawToRpm(int raw) const {
     raw = constrain(raw, 0, 1023);
     return static_cast<long>(raw) * (maxRpm_ - minRpm_) / 1023 + minRpm_;
+  }
+
+  int quantizeRpm(int rpm) const {
+    rpm = constrain(rpm, minRpm_, maxRpm_);
+
+    if (updateThreshold_ <= 1) {
+      return rpm;
+    }
+
+    const int offsetRpm = rpm - minRpm_;
+    const int halfStep = updateThreshold_ / 2;
+    const int quantizedOffset = ((offsetRpm + halfStep) / updateThreshold_) * updateThreshold_;
+    return constrain(minRpm_ + quantizedOffset, minRpm_, maxRpm_);
   }
 
   uint8_t analogPin_;
