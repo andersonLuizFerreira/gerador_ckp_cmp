@@ -40,7 +40,7 @@ public:
     }
 
     if (runFlag_) {
-      if (key == KeyboardKey::Select || key == KeyboardKey::Right) {
+      if (key == KeyboardKey::Select || key == KeyboardKey::Right || key == KeyboardKey::Return) {
         stop();
       }
 
@@ -50,7 +50,7 @@ public:
 
     if (key == KeyboardKey::Select || key == KeyboardKey::Right) {
       confirmStoppedSelection();
-    } else if (key == KeyboardKey::Left) {
+    } else if (key == KeyboardKey::Left || key == KeyboardKey::Return) {
       backStoppedSelection();
     } else if (key == KeyboardKey::Down) {
       nextItem();

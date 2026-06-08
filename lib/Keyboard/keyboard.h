@@ -10,7 +10,8 @@ enum class KeyboardKey {
   Up,
   Down,
   Left,
-  Select
+  Select,
+  Return
 };
 
 struct KeyboardReading {
@@ -92,6 +93,9 @@ private:
     if (millivolts < KEYBOARD_SELECT_THRESHOLD_MV) {
       return KeyboardKey::Select;
     }
+    if (millivolts < KEYBOARD_RETURN_THRESHOLD_MV) {
+      return KeyboardKey::Return;
+    }
 
     return KeyboardKey::None;
   }
@@ -121,6 +125,8 @@ inline const char *keyboardKeyName(KeyboardKey key) {
       return "LEFT";
     case KeyboardKey::Select:
       return "SELECT";
+    case KeyboardKey::Return:
+      return "RETURN";
     case KeyboardKey::None:
     default:
       return "NONE";
