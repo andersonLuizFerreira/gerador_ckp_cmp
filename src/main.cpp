@@ -7,13 +7,15 @@
 #include <signal_engine.h>
 #include <signal_menu.h>
 #include <signal_patterns.h>
+#include <signal_power_control.h>
 
 AnalogKeyboard keyboard;
 LcdDisplay lcd;
 RpmControl rpmControl;
 SignalEngine signalEngine;
+SignalPowerControl signalPowerControl;
 volatile bool simulatorRun = false;
-SignalMenu signalMenu(lcd, signalEngine, simulatorRun);
+SignalMenu signalMenu(lcd, signalEngine, signalPowerControl, simulatorRun);
 
 struct Timer1Prescaler {
   uint16_t value;
@@ -100,6 +102,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
   keyboard.begin();
   rpmControl.begin();
+  signalPowerControl.begin();
   lcd.begin();
   rpmControl.update();
   signalMenu.begin();

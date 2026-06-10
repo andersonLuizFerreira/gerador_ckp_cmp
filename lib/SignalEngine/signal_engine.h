@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <defs.h>
+#include <signal_power_control.h>
 
 enum class SignalOutputType {
   Hall,
@@ -23,12 +24,38 @@ struct CkpConfig {
   uint8_t cycleRepeatCount;
   SignalOutputType outputType;
   uint8_t missingLevel;
+
+  SignalPowerSource powerSource;
+
+  CkpConfig(uint16_t toothCount = CKP_DEFAULT_TOOTH_COUNT,
+            uint8_t missingToothCount = CKP_DEFAULT_MISSING_TOOTH_COUNT,
+            uint8_t cycleRepeatCount = CKP_DEFAULT_CYCLE_REPEAT_COUNT,
+            SignalOutputType outputType = SignalOutputType::Hall,
+            uint8_t missingLevel = CKP_DEFAULT_MISSING_LEVEL,
+            SignalPowerSource powerSource = SignalPowerSource::Internal5V)
+      : toothCount(toothCount),
+        missingToothCount(missingToothCount),
+        cycleRepeatCount(cycleRepeatCount),
+        outputType(outputType),
+        missingLevel(missingLevel),
+        powerSource(powerSource) {}
 };
 
 struct CmpConfig {
   SignalOutputType outputType;
   const uint8_t *eventTable;
   uint8_t initialLevel;
+
+  SignalPowerSource powerSource;
+
+  CmpConfig(SignalOutputType outputType = SignalOutputType::Hall,
+            const uint8_t *eventTable = nullptr,
+            uint8_t initialLevel = CMP_DEFAULT_INITIAL_LEVEL,
+            SignalPowerSource powerSource = SignalPowerSource::Internal5V)
+      : outputType(outputType),
+        eventTable(eventTable),
+        initialLevel(initialLevel),
+        powerSource(powerSource) {}
 };
 
 class SignalEngine {

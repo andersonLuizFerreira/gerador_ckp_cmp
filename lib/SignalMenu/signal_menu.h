@@ -7,6 +7,7 @@
 #include <lcd_display.h>
 #include <signal_engine.h>
 #include <signal_patterns.h>
+#include <signal_power_control.h>
 
 static const char MENU_TEXT_MANUFACTURER[] PROGMEM = "Fabricante:";
 static const char MENU_TEXT_MODEL[] PROGMEM = "Modelo:";
@@ -18,8 +19,8 @@ enum class SignalMenuPage {
 
 class SignalMenu {
 public:
-  SignalMenu(LcdDisplay &lcd, SignalEngine &engine, volatile bool &runFlag)
-      : lcd_(lcd), engine_(engine), runFlag_(runFlag) {}
+  SignalMenu(LcdDisplay &lcd, SignalEngine &engine, SignalPowerControl &powerControl, volatile bool &runFlag)
+      : lcd_(lcd), engine_(engine), powerControl_(powerControl), runFlag_(runFlag) {}
 
   void begin() {
     selectedManufacturerIndex_ = 0;
@@ -72,7 +73,7 @@ public:
 private:
   void start() {
     runFlag_ = false;
-    applySignalPattern(engine_, selectedPattern());
+    applySignalPattern(engine_, powerControl_, selectedPattern());
     engine_.reset();
     runFlag_ = true;
   }
@@ -159,35 +160,105 @@ private:
   void renderManufacturer() {
     lcd_.setCursor(0, 0);
     lcd_.printPadded_P(MENU_TEXT_MANUFACTURER);
-    lcd_.setCursor(0, 1);
-    lcd_.printPadded_P(currentManufacturer().name, LCD_COLUMNS - 1);
-    lcd_.setCursor(LCD_COLUMNS - 1, 1);
-    lcd_.print(">");
+    renderManufacturerOptions();
   }
 
   void renderModel() {
     lcd_.setCursor(0, 0);
     lcd_.printPadded_P(MENU_TEXT_MODEL);
-    lcd_.setCursor(0, 1);
-    lcd_.printPadded_P(selectedPattern().name, LCD_COLUMNS - 1);
-    lcd_.setCursor(LCD_COLUMNS - 1, 1);
-    lcd_.print(">");
+    renderModelOptions();
   }
 
   void renderRunning(int rpm) {
     char rpmText[LCD_COLUMNS + 1];
-    snprintf(rpmText, sizeof(rpmText), "RPM:%-4d     %c/%c", rpm, outputTypeCode(selectedPattern().ckp.outputType),
+    char ckpText[LCD_COLUMNS + 1];
+    char powerText[LCD_COLUMNS + 1];
+    snprintf(rpmText, sizeof(rpmText), "RPM:%-4d CKP/CMP:%c/%c", rpm, outputTypeCode(selectedPattern().ckp.outputType),
              outputTypeCode(selectedPattern().cmp.outputType));
+    snprintf(ckpText, sizeof(ckpText), "CKP:%u-%u Rep:%u",
+             selectedPattern().ckp.toothCount,
+             selectedPattern().ckp.missingToothCount,
+             selectedPattern().ckp.cycleRepeatCount);
+    snprintf(powerText, sizeof(powerText), "Alim C:%s M:%s",
+             powerSourceText(selectedPattern().ckp.powerSource),
+             powerSourceText(selectedPattern().cmp.powerSource));
 
     lcd_.setCursor(0, 0);
     lcd_.printPadded_P(selectedPattern().name);
     lcd_.setCursor(0, 1);
     lcd_.printPadded(rpmText);
+    lcd_.setCursor(0, 2);
+    lcd_.printPadded(ckpText);
+    lcd_.setCursor(0, 3);
+    lcd_.printPadded(powerText);
     rendered_ = true;
+  }
+
+  void renderManufacturerOptions() {
+    const uint8_t visibleRows = optionRowCount();
+    const uint8_t firstIndex = firstVisibleIndex(selectedManufacturerIndex_, SIGNAL_MANUFACTURER_COUNT, visibleRows);
+
+    for (uint8_t row = 1; row < LCD_ROWS; row++) {
+      const uint8_t itemIndex = firstIndex + row - 1;
+      lcd_.setCursor(0, row);
+
+      if (itemIndex >= SIGNAL_MANUFACTURER_COUNT) {
+        lcd_.printPadded("");
+        continue;
+      }
+
+      lcd_.print(itemIndex == selectedManufacturerIndex_ ? "> " : "  ");
+      lcd_.printPadded_P(SIGNAL_MANUFACTURERS[itemIndex].name, LCD_COLUMNS - 2);
+    }
+  }
+
+  void renderModelOptions() {
+    const uint8_t modelCount = currentManufacturer().modelCount;
+    const uint8_t visibleRows = optionRowCount();
+    const uint8_t firstIndex = firstVisibleIndex(selectedModelIndex_, modelCount, visibleRows);
+
+    for (uint8_t row = 1; row < LCD_ROWS; row++) {
+      const uint8_t modelIndex = firstIndex + row - 1;
+      lcd_.setCursor(0, row);
+
+      if (modelIndex >= modelCount) {
+        lcd_.printPadded("");
+        continue;
+      }
+
+      lcd_.print(modelIndex == selectedModelIndex_ ? "> " : "  ");
+      lcd_.printPadded_P(patternForModel(modelIndex).name, LCD_COLUMNS - 2);
+    }
+  }
+
+  static uint8_t optionRowCount() {
+    return LCD_ROWS > 1 ? LCD_ROWS - 1 : 1;
+  }
+
+  static uint8_t firstVisibleIndex(uint8_t selectedIndex, uint8_t itemCount, uint8_t visibleRows) {
+    if (itemCount <= visibleRows) {
+      return 0;
+    }
+
+    uint8_t firstIndex = selectedIndex;
+    if (firstIndex > 0) {
+      firstIndex--;
+    }
+
+    const uint8_t maxFirstIndex = itemCount - visibleRows;
+    if (firstIndex > maxFirstIndex) {
+      firstIndex = maxFirstIndex;
+    }
+
+    return firstIndex;
   }
 
   static char outputTypeCode(SignalOutputType outputType) {
     return outputType == SignalOutputType::Inductive ? 'I' : 'H';
+  }
+
+  static const char *powerSourceText(SignalPowerSource source) {
+    return source == SignalPowerSource::External ? "EXT" : "5V";
   }
 
   const SignalManufacturer &currentManufacturer() const {
@@ -195,11 +266,20 @@ private:
   }
 
   uint8_t currentPatternIndex() const {
-    return currentManufacturer().modelPatternIndexes[selectedModelIndex_];
+    return patternIndexForModel(selectedModelIndex_);
+  }
+
+  uint8_t patternIndexForModel(uint8_t modelIndex) const {
+    return currentManufacturer().modelPatternIndexes[modelIndex];
+  }
+
+  const SignalPattern &patternForModel(uint8_t modelIndex) const {
+    return *SIGNAL_PATTERNS[patternIndexForModel(modelIndex)];
   }
 
   LcdDisplay &lcd_;
   SignalEngine &engine_;
+  SignalPowerControl &powerControl_;
   volatile bool &runFlag_;
   SignalMenuPage page_ = SignalMenuPage::Manufacturer;
   uint8_t selectedManufacturerIndex_ = 0;

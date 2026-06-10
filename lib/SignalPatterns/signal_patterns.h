@@ -5,6 +5,7 @@
 #include <avr/pgmspace.h>
 #include <defs.h>
 #include <signal_engine.h>
+#include <signal_power_control.h>
 
 static const uint8_t CMP_TABLE_EMPTY[CMP_TABLE_BYTES] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -114,12 +115,12 @@ static const char SIGNAL_PATTERN_NAME_SIEMENS_SID901[] PROGMEM = "SID901";
 static const char SIGNAL_PATTERN_NAME_MARELLI_TRUCK[] PROGMEM = "Marelli Truck";
 static const char SIGNAL_PATTERN_NAME_FPT_CURSOR[] PROGMEM = "FPT Cursor";
 
-static const CkpConfig CKP_CONFIG_UNCALIBRATED = {1, 1, 1, SignalOutputType::Inductive, LOW};
-static const CkpConfig CKP_CONFIG_60_2_INDUCTIVE = {60, 2, 1, SignalOutputType::Inductive, LOW};
+static const CkpConfig CKP_CONFIG_UNCALIBRATED = {1, 1, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External};
+static const CkpConfig CKP_CONFIG_60_2_INDUCTIVE = {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External};
 static const CmpConfig CMP_CONFIG_EMPTY_HALL = {SignalOutputType::Hall, CMP_TABLE_EMPTY, LOW};
-static const CmpConfig CMP_CONFIG_EMPTY_INDUCTIVE = {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW};
+static const CmpConfig CMP_CONFIG_EMPTY_INDUCTIVE = {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW, SignalPowerSource::External};
 static const CmpConfig CMP_CONFIG_FPT_CURSOR_INDUCTIVE = {
-    SignalOutputType::Inductive, CMP_TABLE_FPT_CURSOR_60_2_INDUCTIVE, LOW};
+    SignalOutputType::Inductive, CMP_TABLE_FPT_CURSOR_60_2_INDUCTIVE, LOW, SignalPowerSource::External};
 static const CmpConfig CMP_CONFIG_EDC16C9_HALL = {SignalOutputType::Hall, CMP_TABLE_EDC16C9_60_2_HALL, HIGH};
 
 static const SignalPattern SIGNAL_PATTERN_BOSCH_60_2_HALL = {
@@ -130,7 +131,7 @@ static const SignalPattern SIGNAL_PATTERN_BOSCH_60_2_HALL = {
 
 static const SignalPattern SIGNAL_PATTERN_BOSCH_60_2_INDUCTIVE = {
     SIGNAL_PATTERN_NAME_BOSCH_60_2_INDUCTIVE,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     {SignalOutputType::Hall, CMP_TABLE_EMPTY, LOW},
 };
 
@@ -142,7 +143,7 @@ static const SignalPattern SIGNAL_PATTERN_44_4_HALL = {
 
 static const SignalPattern SIGNAL_PATTERN_44_4_INDUCTIVE = {
     SIGNAL_PATTERN_NAME_44_4_INDUCTIVE,
-    {44, 4, 1, SignalOutputType::Inductive, LOW},
+    {44, 4, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     {SignalOutputType::Hall, CMP_TABLE_EMPTY, LOW},
 };
 
@@ -154,7 +155,7 @@ static const SignalPattern SIGNAL_PATTERN_36_1_HALL = {
 
 static const SignalPattern SIGNAL_PATTERN_36_1_INDUCTIVE = {
     SIGNAL_PATTERN_NAME_36_1_INDUCTIVE,
-    {36, 1, 1, SignalOutputType::Inductive, LOW},
+    {36, 1, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     {SignalOutputType::Hall, CMP_TABLE_EMPTY, LOW},
 };
 
@@ -179,7 +180,7 @@ static const SignalPattern SIGNAL_PATTERN_SAVEIRO_60_2_HALL_CMP = {
 static const SignalPattern SIGNAL_PATTERN_EDC7_C1 = {
     SIGNAL_PATTERN_NAME_EDC7_C1,
     CKP_CONFIG_60_2_INDUCTIVE,
-    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW},
+    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW, SignalPowerSource::External},
 };
 
 static const SignalPattern SIGNAL_PATTERN_EDC7_UC31 = {
@@ -190,20 +191,20 @@ static const SignalPattern SIGNAL_PATTERN_EDC7_UC31 = {
 
 static const SignalPattern SIGNAL_PATTERN_EMS = {
     SIGNAL_PATTERN_NAME_EMS,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
-    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
+    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW, SignalPowerSource::External},
 };
 
 static const SignalPattern SIGNAL_PATTERN_EDC17C31 = {
     SIGNAL_PATTERN_NAME_EDC17C31,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
-    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
+    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW, SignalPowerSource::External},
 };
 
 static const SignalPattern SIGNAL_PATTERN_EDC19C31 = {
     SIGNAL_PATTERN_NAME_EDC19C31,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
-    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
+    {SignalOutputType::Inductive, CMP_TABLE_EMPTY, LOW, SignalPowerSource::External},
 };
 
 static const SignalPattern SIGNAL_PATTERN_VW_CONST_CM850 = {
@@ -256,7 +257,7 @@ static const SignalPattern SIGNAL_PATTERN_IVECO_DAILY = {
 
 static const SignalPattern SIGNAL_PATTERN_VOLVO_VM_EDC7 = {
     SIGNAL_PATTERN_NAME_VOLVO_VM_EDC7,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     CMP_CONFIG_EMPTY_INDUCTIVE,
 };
 
@@ -292,7 +293,7 @@ static const SignalPattern SIGNAL_PATTERN_SCANIA_DC13_EMS = {
 
 static const SignalPattern SIGNAL_PATTERN_MWM_MAXXFORCE = {
     SIGNAL_PATTERN_NAME_MWM_MAXXFORCE,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     CMP_CONFIG_EMPTY_INDUCTIVE,
 };
 
@@ -304,7 +305,7 @@ static const SignalPattern SIGNAL_PATTERN_CUMMINS_ISB_CM850 = {
 
 static const SignalPattern SIGNAL_PATTERN_VW_WORKER_MWM = {
     SIGNAL_PATTERN_NAME_VW_WORKER_MWM,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     CMP_CONFIG_EMPTY_INDUCTIVE,
 };
 
@@ -316,7 +317,7 @@ static const SignalPattern SIGNAL_PATTERN_FORD_CARGO_CUMMINS = {
 
 static const SignalPattern SIGNAL_PATTERN_INTERNATIONAL_NGD = {
     SIGNAL_PATTERN_NAME_INTERNATIONAL_NGD,
-    {60, 2, 1, SignalOutputType::Inductive, LOW},
+    {60, 2, 1, SignalOutputType::Inductive, LOW, SignalPowerSource::External},
     CMP_CONFIG_EMPTY_INDUCTIVE,
 };
 
@@ -477,9 +478,11 @@ static const SignalManufacturer SIGNAL_MANUFACTURERS[] = {
 
 static const uint8_t SIGNAL_MANUFACTURER_COUNT = sizeof(SIGNAL_MANUFACTURERS) / sizeof(SIGNAL_MANUFACTURERS[0]);
 
-inline void applySignalPattern(SignalEngine &engine, const SignalPattern &pattern) {
+inline void applySignalPattern(SignalEngine &engine, SignalPowerControl &powerControl, const SignalPattern &pattern) {
+  powerControl.configure(pattern.ckp.powerSource, pattern.cmp.powerSource);
   engine.configureCkp(pattern.ckp);
   engine.configureCmp(pattern.cmp);
 }
 
 #endif
+
